@@ -1,0 +1,9 @@
+[package]
+name = "volt_compiler"
+version = "0.1.0"
+edition = "2021"
+authors = ["Xzuff Architect"]
+description = "Volt DSL Parser and Lexer for Gravity Kernel & Xzuff UI OS"
+
+[dependencies]
+# Tiada dependensi luar untuk mengekalkan saiz binaan yang kecil dan pantas
