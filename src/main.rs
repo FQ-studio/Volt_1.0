@@ -1,3 +1,6 @@
+extern crate alloc;
+use alloc::string::String;
+use alloc::string::ToString;
 mod lexer;
 mod parser;
 mod codegen;
