@@ -7,3 +7,9 @@ description = "Volt DSL Parser and Lexer for Gravity Kernel & Xzuff UI OS"
 
 [dependencies]
 # Tiada dependensi luar untuk mengekalkan saiz binaan yang kecil dan pantas
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
