@@ -1,0 +1,38 @@
+name: Volt Compiler CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Rust Toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: |
+          aarch64-unknown-none-softfloat
+          x86_64-unknown-none
+          riscv64gc-unknown-none-elf
+
+    - name: Check Formatting & Syntax
+      run: cargo check --verbose
+
+    - name: Build Bare-Metal AArch64 (Redmi 14C)
+      run: cargo build --target aarch64-unknown-none-softfloat --release
+
+    - name: Build Bare-Metal x86_64 (PC/QEMU)
+      run: cargo build --target x86_64-unknown-none --release
+
+    - name: Build Bare-Metal RISC-V 64-bit
+      run: cargo build --target riscv64gc-unknown-none-elf --release
+
+    - name: Test Volt CLI Execution
+      run: cargo run -- i xzuff-ui
