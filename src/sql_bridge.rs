@@ -1,3 +1,6 @@
+extern crate alloc;
+use alloc::string::String;
+use alloc::string::ToString;
 use std::collections::HashMap;
 
 pub struct SqlVectorBridge {
