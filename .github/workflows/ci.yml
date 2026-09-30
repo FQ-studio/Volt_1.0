@@ -13,17 +13,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Rust Toolchain
+    - name: Install Bare-Metal Rust Toolchain
       uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: thumbv7em-none-eabi
 
-    - name: Run Syntax & Borrow Check
-      run: cargo check --verbose
+    - name: Run Cargo Check
+      run: cargo check --target thumbv7em-none-eabi --verbose
 
-    - name: Build Binary
-      run: cargo build --release --verbose
+    - name: Build Bare-Metal Binary
+      run: cargo build --target thumbv7em-none-eabi --release --verbose
 
-    - name: Upload Artifact
+    - name: Upload Bare-Metal Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: volt-compiler-linux-x86_64
-        path: target/release/volt_compiler
+        name: volt-compiler-baremetal
+        path: target/thumbv7em-none-eabi/release/volt_compiler
