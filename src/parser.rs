@@ -1,53 +1,20 @@
 use crate::lexer::{Lexer, Token};
 
-// =========================================================================
-// 1. STRUKTUR DATA AST (ABSTRACT SYNTAX TREE)
-// =========================================================================
-
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum EngineTool {
-    // 1. AI LLM Engine (Gravity AI)
-    AILLM {
-        id: String,
-        context_mode: String,
-        ram_budget_mb: u32,
-    },
-    // 2. Bare Metal System Control
-    BareMetal {
-        id: String,
-        arch: String,
-        ram_budget_mb: u32,
-    },
-    // 3. Dynamic UI Engine
-    UIEngine {
-        id: String,
-        renderer: String,
-        ram_budget_mb: u32,
-    },
-    // 4. Camera & Spatial Vision Pipeline
-    Camera {
-        id: String,
-        features: Vec<String>,
-        ram_budget_mb: u32,
-    },
-    // 5. Crate / Package Manager
-    Crate {
-        id: String,
-        cargo_bridge: bool,
-        ram_budget_mb: u32,
-    },
+    AILLM { id: String, ram_budget_mb: u32 },
+    BareMetal { id: String, ram_budget_mb: u32 },
+    UIEngine { id: String, ram_budget_mb: u32 },
+    Camera { id: String, ram_budget_mb: u32 },
+    Crate { id: String, ram_budget_mb: u32 },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VoltAST {
     pub kernel_name: String,
     pub ram_limit_mb: u32,
-    pub tools: Vec<EngineTool>, // Memuatkan kesemua 5-in-1 Tools
+    pub tools: Vec<EngineTool>,
 }
-
-// =========================================================================
-// 2. LOGIK ENJIN PARSER
-// =========================================================================
 
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
@@ -55,73 +22,72 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    /// Inisialisasi parser dan baca token pertama daripada Lexer
     pub fn new(mut lexer: Lexer<'a>) -> Self {
         let current_token = lexer.next_token();
         Self { lexer, current_token }
     }
 
-    /// Bergerak ke token seterusnya dalam skrip Volt
     fn advance(&mut self) {
         self.current_token = self.lexer.next_token();
     }
 
-    /// Memproses skrip Volt DSL dan menghasilkan struktur AST lengkap
     pub fn parse_volt_system(&mut self) -> VoltAST {
-        let kernel_name = String::from("GravityKernel");
+        let mut kernel_name = String::from("GravityKernel");
+        let mut ram_limit_mb = 100;
         let mut tools = Vec::new();
 
-        // Mengimbas kesemua token sehingga tamat fail (EOF)
-        while self.current_token != Token::EOF {
+        while self.current_token != Token::Eof {
             match &self.current_token {
-                Token::Identifier(id) if id == "Tool_AILLM" => {
-                    tools.push(EngineTool::AILLM {
-                        id: String::from("gravity_ai_250b"),
-                        context_mode: String::from("DynamicSlidingWindow"),
-                        ram_budget_mb: 40,
-                    });
+                Token::Kernel => {
                     self.advance();
+                    if let Token::Identifier(name) = &self.current_token {
+                        kernel_name = name.clone();
+                    }
                 }
-                Token::Identifier(id) if id == "Tool_BareMetal" => {
-                    tools.push(EngineTool::BareMetal {
-                        id: String::from("arm64_hal"),
-                        arch: String::from("aarch64"),
-                        ram_budget_mb: 15,
-                    });
+                Token::HardwareRamCap => {
                     self.advance();
+                    if let Token::Colon = self.current_token {
+                        self.advance();
+                    }
+                    if let Token::SizeMB(size) = self.current_token {
+                        ram_limit_mb = size as u32;
+                    }
                 }
-                Token::Identifier(id) if id == "Tool_UIEngine" => {
-                    tools.push(EngineTool::UIEngine {
-                        id: String::from("xzuff_compositor"),
-                        renderer: String::from("Volt_Native"),
-                        ram_budget_mb: 20,
-                    });
+                Token::Tools => {
                     self.advance();
+                    if let Token::Colon = self.current_token {
+                        self.advance();
+                    }
+                    if let Token::OpenBracket = self.current_token {
+                        self.advance();
+                        while self.current_token != Token::CloseBracket && self.current_token != Token::Eof {
+                            if let Token::Identifier(tool_str) = &self.current_token {
+                                let default_id = tool_str.clone();
+                                let tool = match tool_str.as_str() {
+                                    "Tool_AILLM" => EngineTool::AILLM { id: default_id, ram_budget_mb: 20 },
+                                    "Tool_BareMetal" => EngineTool::BareMetal { id: default_id, ram_budget_mb: 15 },
+                                    "Tool_UIEngine" => EngineTool::UIEngine { id: default_id, ram_budget_mb: 25 },
+                                    "Tool_Camera" => EngineTool::Camera { id: default_id, ram_budget_mb: 10 },
+                                    "Tool_Crate" => EngineTool::Crate { id: default_id, ram_budget_mb: 30 },
+                                    _ => EngineTool::BareMetal { id: default_id, ram_budget_mb: 10 },
+                                };
+                                tools.push(tool);
+                            }
+                            self.advance();
+                            if let Token::Comma = self.current_token {
+                                self.advance();
+                            }
+                        }
+                    }
                 }
-                Token::Identifier(id) if id == "Tool_Camera" => {
-                    tools.push(EngineTool::Camera {
-                        id: String::from("spatial_vision"),
-                        features: vec![String::from("OCR_Scanner"), String::from("CSI_Stream")],
-                        ram_budget_mb: 15,
-                    });
-                    self.advance();
-                }
-                Token::Identifier(id) if id == "Tool_Crate" => {
-                    tools.push(EngineTool::Crate {
-                        id: String::from("xzuff_crate_hub"),
-                        cargo_bridge: true,
-                        ram_budget_mb: 10,
-                    });
-                    self.advance();
-                }
-                _ => self.advance(),
+                _ => {}
             }
+            self.advance();
         }
 
-        // Kembalikan AST sistem dengan peruntukan RAM tepat 100MB
         VoltAST {
             kernel_name,
-            ram_limit_mb: 100, // Total: 40 + 15 + 20 + 15 + 10 = 100MB
+            ram_limit_mb,
             tools,
         }
     }
