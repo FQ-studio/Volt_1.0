@@ -1,7 +1,4 @@
 extern crate alloc;
-use core::clone::Clone;
-use alloc::string::{String, ToString};
-extern crate alloc;
 use alloc::string::String;
 use alloc::string::ToString;
 use std::env;

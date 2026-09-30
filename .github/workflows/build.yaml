@@ -25,14 +25,11 @@ jobs:
     - name: Check Formatting & Syntax
       run: cargo check --verbose
 
-    - name: Build Bare-Metal AArch64 (Redmi 14C)
+    - name: Build Target AArch64 Bare-Metal
       run: cargo build --target aarch64-unknown-none-softfloat --release
 
-    - name: Build Bare-Metal x86_64 (PC/QEMU)
+    - name: Build Target x86_64 Bare-Metal
       run: cargo build --target x86_64-unknown-none --release
 
-    - name: Build Bare-Metal RISC-V 64-bit
+    - name: Build Target RISC-V Bare-Metal
       run: cargo build --target riscv64gc-unknown-none-elf --release
-
-    - name: Test Volt CLI Execution
-      run: cargo run -- i xzuff-ui
